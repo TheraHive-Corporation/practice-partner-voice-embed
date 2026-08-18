@@ -1,0 +1,43 @@
+<!doctype html>
+  <html lang="en">
+  <head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Practice Partner (Voice)</title>
+  <style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+html, body {
+  width: 100%;
+height: 100dvh;
+overflow: hidden;
+background: transparent;
+}
+</style>
+  </head>
+  <body>
+  <script>
+  (function () {
+var params = new URLSearchParams(window.location.search);
+var character = params.get('character') || 'Nikki';
+var moduleName = params.get('module') || 'Distress Tolerance - TIPP';
+var studentId = params.get('student_id') || '00000000-0000-0000-0000-000000000000';
+
+var el = document.createElement('elevenlabs-convai');
+el.setAttribute('agent-id', 'agent_5901kzyp45bqe3795c2bmsxmyr6t');
+el.setAttribute('dynamic-variables', JSON.stringify({
+  character: character,
+  module: moduleName,
+  student_id: studentId
+  }));
+document.body.appendChild(el);
+
+var script = document.createElement('script');
+script.src = 'https://unpkg.com/@elevenlabs/convai-widget-embed';
+script.async = true;
+script.type = 'text/javascript';
+document.body.appendChild(script);
+})();
+</script>
+  </body>
+  </html>
+  !doctype html>
