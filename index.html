@@ -1,42 +1,98 @@
 <!doctype html>
-  <html lang="en">
-  <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Practice Partner (Voice)</title>
-  <style>
-  * { margin: 0; padding: 0; box-sizing: border-box; }
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Practice Partner (Voice)</title>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
 html, body {
   width: 100%;
-height: 100dvh;
-overflow: hidden;
-background: transparent;
+  height: 100dvh;
+  overflow: hidden;
+  background: transparent;
 }
 </style>
-  </head>
-  <body>
-  <script>
-  (function () {
-var params = new URLSearchParams(window.location.search);
-var character = params.get('character') || 'Nikki';
-var moduleName = params.get('module') || 'Distress Tolerance - TIPP';
-var studentId = params.get('student_id') || '00000000-0000-0000-0000-000000000000';
+</head>
+<body>
+<script>
+(function () {
+  var params = new URLSearchParams(window.location.search);
+  var character = params.get('character') || 'Nikki';
+  var moduleName = params.get('module') || 'Distress Tolerance - TIPP';
+  var studentId = params.get('student_id') || '00000000-0000-0000-0000-000000000000';
 
-var el = document.createElement('elevenlabs-convai');
-el.setAttribute('agent-id', 'agent_5901kzyp45bqe3795c2bmsxmyr6t');
-el.setAttribute('dynamic-variables', JSON.stringify({
-  character: character,
-  module: moduleName,
-  student_id: studentId
+  var el = document.createElement('elevenlabs-convai');
+  el.setAttribute('agent-id', 'agent_5901kzyp45bqe3795c2bmsxmyr6t');
+  el.setAttribute('dynamic-variables', JSON.stringify({
+    character: character,
+    module: moduleName,
+    student_id: studentId
   }));
-document.body.appendChild(el);
+  document.body.appendChild(el);
 
-var script = document.createElement('script');
-script.src = 'https://unpkg.com/@elevenlabs/convai-widget-embed';
-script.async = true;
-script.type = 'text/javascript';
-document.body.appendChild(script);
+  var script = document.createElement('script');
+  script.src = 'https://unpkg.com/@elevenlabs/convai-widget-embed';
+  script.async = true;
+  script.type = 'text/javascript';
+  document.body.appendChild(script);
+
+  // The ElevenLabs widget has no official "fill container" mode - the
+  // "Full" variant renders a fixed 400x550px card anchored to a corner
+  // inside its shadow DOM. Since this page's only job is to host the
+  // widget inside an iframe, we reach into the shadow root and force it
+  // to fill the available space. This targets undocumented internal
+  // class names (.overlay / .sheet) and may need updating if a future
+  // ElevenLabs widget release renames them.
+  function fillWidget() {
+    var host = document.querySelector('elevenlabs-convai');
+    if (!host || !host.shadowRoot) return false;
+    var overlay = host.shadowRoot.querySelector('.overlay');
+    var sheet = host.shadowRoot.querySelector('.sheet');
+    if (!overlay || !sheet) return false;
+
+    overlay.style.setProperty('margin', '0', 'important');
+    overlay.style.setProperty('padding', '0', 'important');
+    overlay.style.setProperty('inset', '0', 'important');
+    overlay.style.setProperty('width', '100%', 'important');
+    overlay.style.setProperty('height', '100%', 'important');
+
+    sheet.style.setProperty('position', 'static', 'important');
+    sheet.style.setProperty('inset', '0', 'important');
+    sheet.style.setProperty('top', '0', 'important');
+    sheet.style.setProperty('left', '0', 'important');
+    sheet.style.setProperty('right', '0', 'important');
+    sheet.style.setProperty('bottom', '0', 'important');
+    sheet.style.setProperty('width', '100%', 'important');
+    sheet.style.setProperty('height', '100%', 'important');
+    sheet.style.setProperty('max-width', '100%', 'important');
+    sheet.style.setProperty('max-height', '100%', 'important');
+    sheet.style.setProperty('border-radius', '0', 'important');
+    sheet.style.setProperty('box-shadow', 'none', 'important');
+    return true;
+  }
+
+  var tries = 0;
+  var poll = setInterval(function () {
+    tries++;
+    if (fillWidget() || tries > 150) {
+      clearInterval(poll);
+    }
+  }, 200);
+
+  var observerTries = 0;
+  var attachObserver = setInterval(function () {
+    observerTries++;
+    var host = document.querySelector('elevenlabs-convai');
+    if (host && host.shadowRoot) {
+      var mo = new MutationObserver(function () { fillWidget(); });
+      mo.observe(host.shadowRoot, { childList: true, subtree: true, attributes: true });
+      clearInterval(attachObserver);
+    } else if (observerTries > 150) {
+      clearInterval(attachObserver);
+    }
+  }, 200);
 })();
 </script>
- </body>
-  </html>
+</body>
+</html>
