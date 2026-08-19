@@ -38,58 +38,55 @@ html, body {
   document.body.appendChild(script);
 
   // The ElevenLabs widget has no official "fill container" mode - the
-  // "Full" variant renders a fixed 400x550px card anchored to a corner
-  // inside its shadow DOM. Since this page's only job is to host the
-  // widget inside an iframe, we reach into the shadow root and force it
-  // to fill the available space. This targets undocumented internal
-  // class names (.overlay / .sheet) and may need updating if a future
-  // ElevenLabs widget release renames them.
-  function fillWidget() {
+  // "Full" variant renders a fixed 400x550px card anchored to a corner,
+  // sized by a stylesheet rule inside its own shadow DOM. Setting inline
+  // styles on the elements directly doesn't stick, because the widget's
+  // framework re-renders and rewrites the inline "style" attribute on its
+  // own, wiping out anything set that way within a fraction of a second.
+  // Instead we inject our own <style> element into the shadow root. That's
+  // a separate stylesheet the widget's re-renders never touch, and because
+  // it's appended after the widget's own <style> tag, our !important rules
+  // win the cascade. This targets undocumented internal class names
+  // (.overlay / .sheet) and may need updating if a future ElevenLabs
+  // widget release renames them.
+  function injectFillStyle() {
     var host = document.querySelector('elevenlabs-convai');
     if (!host || !host.shadowRoot) return false;
-    var overlay = host.shadowRoot.querySelector('.overlay');
-    var sheet = host.shadowRoot.querySelector('.sheet');
-    if (!overlay || !sheet) return false;
+    if (host.shadowRoot.getElementById('fill-container-style')) return true;
 
-    overlay.style.setProperty('margin', '0', 'important');
-    overlay.style.setProperty('padding', '0', 'important');
-    overlay.style.setProperty('inset', '0', 'important');
-    overlay.style.setProperty('width', '100%', 'important');
-    overlay.style.setProperty('height', '100%', 'important');
-
-    sheet.style.setProperty('position', 'static', 'important');
-    sheet.style.setProperty('inset', '0', 'important');
-    sheet.style.setProperty('top', '0', 'important');
-    sheet.style.setProperty('left', '0', 'important');
-    sheet.style.setProperty('right', '0', 'important');
-    sheet.style.setProperty('bottom', '0', 'important');
-    sheet.style.setProperty('width', '100%', 'important');
-    sheet.style.setProperty('height', '100%', 'important');
-    sheet.style.setProperty('max-width', '100%', 'important');
-    sheet.style.setProperty('max-height', '100%', 'important');
-    sheet.style.setProperty('border-radius', '0', 'important');
-    sheet.style.setProperty('box-shadow', 'none', 'important');
+    var style = document.createElement('style');
+    style.id = 'fill-container-style';
+    style.textContent =
+      '.overlay {' +
+      '  margin: 0 !important;' +
+      '  padding: 0 !important;' +
+      '  inset: 0 !important;' +
+      '  width: 100% !important;' +
+      '  height: 100% !important;' +
+      '}' +
+      '.sheet {' +
+      '  position: static !important;' +
+      '  inset: 0 !important;' +
+      '  top: 0 !important;' +
+      '  left: 0 !important;' +
+      '  right: 0 !important;' +
+      '  bottom: 0 !important;' +
+      '  width: 100% !important;' +
+      '  height: 100% !important;' +
+      '  max-width: 100% !important;' +
+      '  max-height: 100% !important;' +
+      '  border-radius: 0 !important;' +
+      '  box-shadow: none !important;' +
+      '}';
+    host.shadowRoot.appendChild(style);
     return true;
   }
 
   var tries = 0;
   var poll = setInterval(function () {
     tries++;
-    if (fillWidget() || tries > 150) {
+    if (injectFillStyle() || tries > 150) {
       clearInterval(poll);
-    }
-  }, 200);
-
-  var observerTries = 0;
-  var attachObserver = setInterval(function () {
-    observerTries++;
-    var host = document.querySelector('elevenlabs-convai');
-    if (host && host.shadowRoot) {
-      var mo = new MutationObserver(function () { fillWidget(); });
-      mo.observe(host.shadowRoot, { childList: true, subtree: true, attributes: true });
-      clearInterval(attachObserver);
-    } else if (observerTries > 150) {
-      clearInterval(attachObserver);
     }
   }, 200);
 })();
